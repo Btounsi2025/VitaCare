@@ -5,10 +5,12 @@ This application provides personalized skin care recommendations using AI.
 
 import streamlit as st
 import os
+import json
 from langchain_openai import ChatOpenAI
 from langchain.prompts import ChatPromptTemplate
 from langchain.chains import LLMChain
-from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+from langchain.output_parsers import PydanticOutputParser
+from pydantic import BaseModel
 from typing import List, Dict
 
 # Configure page
@@ -16,29 +18,31 @@ st.set_page_config(
     page_title="Conseiller en Soins de la Peau",
     layout="wide"
 )
+left_co, cent_co,last_co = st.columns(3)
+with cent_co:
+    st.image("images/vitacare_logo.jpg", width=300)
 
-# Define the response schemas
-response_schemas = [
-    ResponseSchema(
-        name="diagnostic",
-        description="Un diagnostic détaillé des problèmes et besoins de la peau en français"
-    ),
-    ResponseSchema(
-        name="ingredients",
-        description="Une liste des ingrédients clés recommandés pour traiter les problèmes de peau"
-    ),
-    ResponseSchema(
-        name="routine_jour",
-        description="Une routine de soins détaillée pour le jour"
-    ),
-    ResponseSchema(
-        name="routine_nuit",
-        description="Une routine de soins détaillée pour la nuit"
-    )
-]
+# --- Pydantic Models ---
 
-# Initialize the output parser
-output_parser = StructuredOutputParser.from_response_schemas(response_schemas)
+class Ingredient(BaseModel):
+    name: str
+    action: str
+
+class Product(BaseModel):
+    name: str
+    type: str
+    action: str
+
+class Routine(BaseModel):
+    products: List[Product]
+
+class Recommendation(BaseModel):
+    diagnostic: str
+    ingredients: List[Ingredient]
+    routine_jour: Routine
+    routine_nuit: Routine
+
+output_parser = PydanticOutputParser(pydantic_object=Recommendation)
 
 # Create the prompt template
 TEMPLATE = """Vous êtes un expert dermatologue spécialisé dans les soins de la peau.
@@ -48,7 +52,7 @@ Type de peau: {skin_type}
 Problèmes de peau: {skin_concerns}
 Informations supplémentaires: {additional_info}
 
-Veuillez fournir une analyse détaillée et des recommandations personnalisées.
+Veuillez fournir un diagnostic détaillé de la peau  et des problèmes rencontrés. Et fournissez des recommandations personnalisées d'ingrédients et de produits pour résoudre les problèmes de peau.
 
 {format_instructions}
 
@@ -56,7 +60,7 @@ Assurez-vous que vos recommandations sont:
 1. Spécifiques au type de peau et aux problèmes mentionnés
 2. Réalistes et applicables au quotidien
 3. Expliquées de manière claire et accessible
-4. Basées sur des ingrédients reconnus en dermatologie
+4. Basées sur des ingrédients reconnus en dermatologie. Précisez le role de chaque ingrédient par rapport a une problématique diagnostiquée.
 """
 
 prompt = ChatPromptTemplate.from_template(TEMPLATE)
@@ -77,27 +81,21 @@ class SkinCareAdvisor:
             prompt=prompt
         )
     
-    def get_recommendations(self, skin_type: str, skin_concerns: List[str], additional_info: str) -> Dict:
+    def get_recommendations(self, skin_type: str, skin_concerns: List[str], additional_info: str) -> Recommendation:
         """Get personalized skin care recommendations"""
         try:
-            # Format the concerns list
             concerns_str = ", ".join(skin_concerns) if skin_concerns else "Aucun problème spécifique mentionné"
-            
-            # Get format instructions
+            # Instruct the LLM to output in the expected JSON format
             format_instructions = output_parser.get_format_instructions()
-            
-            # Get the response
             response = self.chain.invoke({
                 "skin_type": skin_type,
                 "skin_concerns": concerns_str,
                 "additional_info": additional_info,
                 "format_instructions": format_instructions
             })
-            
-            # Parse the response
-            parsed_response = output_parser.parse(response['text'])
-            return parsed_response
-            
+            # Parse the response as JSON and then into the Pydantic model           
+            data = json.loads(response['text'])
+            return Recommendation(**data)
         except Exception as e:
             st.error(f"Une erreur s'est produite: {str(e)}")
             return None
@@ -123,7 +121,6 @@ def create_sidebar():
 def main():
     create_sidebar()
     
-    st.title("Conseiller en Soins de la Peau")
     st.write("Obtenez des recommandations personnalisées pour votre routine de soins.")
     
     # Initialize the advisor
@@ -168,24 +165,27 @@ def main():
             )
             
             if recommendations:
-                # Display recommendations in a structured way
                 st.success("Analyse complétée! Voici vos recommandations personnalisées:")
                 
                 # Diagnostic
                 st.markdown("### 🔍 Diagnostic")
-                st.markdown(recommendations["diagnostic"])
+                st.markdown(recommendations.diagnostic)
                 
                 # Ingredients
-                st.markdown("### 🧪 Ingrédients Recommandés")
-                st.markdown(recommendations["ingredients"])
+                st.markdown("### 🧪 Ingrédients recommandés")
+                st.markdown("- " + "\n- ".join(
+                    f"{ing.name}: {ing.action}" for ing in recommendations.ingredients
+                ))
                 
                 # Daily Routine
-                st.markdown("### ☀️ Routine du Jour")
-                st.markdown(recommendations["routine_jour"])
+                st.markdown("### ☀️ Routine du jour")
+                for prod in recommendations.routine_jour.products:
+                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.action}")
                 
                 # Night Routine
-                st.markdown("### 🌙 Routine du Nuit")
-                st.markdown(recommendations["routine_nuit"])
+                st.markdown("### 🌙 Routine de nuit")
+                for prod in recommendations.routine_nuit.products:
+                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.action}")
                 
                 # Add a note
                 st.info("""
