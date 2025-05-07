@@ -4,15 +4,7 @@ This application provides personalized skin care recommendations using AI.
 """
 
 import streamlit as st
-import os
-import json
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
-from langchain.chains import LLMChain
-from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
-from typing import List, Dict
-
+from model import SkinCareAdvisor
 # Configure page
 st.set_page_config(
     page_title="Conseiller en Soins de la Peau",
@@ -22,83 +14,6 @@ left_co, cent_co,last_co = st.columns(3)
 with cent_co:
     st.image("images/vitacare_logo.jpg", width=300)
 
-# --- Pydantic Models ---
-
-class Ingredient(BaseModel):
-    name: str
-    action: str
-
-class Product(BaseModel):
-    name: str
-    type: str
-    action: str
-
-class Routine(BaseModel):
-    products: List[Product]
-
-class Recommendation(BaseModel):
-    diagnostic: str
-    ingredients: List[Ingredient]
-    routine_jour: Routine
-    routine_nuit: Routine
-
-output_parser = PydanticOutputParser(pydantic_object=Recommendation)
-
-# Create the prompt template
-TEMPLATE = """Vous êtes un expert dermatologue spécialisé dans les soins de la peau.
-
-Information sur le patient:
-Type de peau: {skin_type}
-Problèmes de peau: {skin_concerns}
-Informations supplémentaires: {additional_info}
-
-Veuillez fournir un diagnostic détaillé de la peau  et des problèmes rencontrés. Et fournissez des recommandations personnalisées d'ingrédients et de produits pour résoudre les problèmes de peau.
-
-{format_instructions}
-
-Assurez-vous que vos recommandations sont:
-1. Spécifiques au type de peau et aux problèmes mentionnés
-2. Réalistes et applicables au quotidien
-3. Expliquées de manière claire et accessible
-4. Basées sur des ingrédients reconnus en dermatologie. Précisez le role de chaque ingrédient par rapport a une problématique diagnostiquée.
-"""
-
-prompt = ChatPromptTemplate.from_template(TEMPLATE)
-
-class SkinCareAdvisor:
-    def __init__(self):
-        """Initialize the skin care advisor with OpenAI model"""
-        self.llm = ChatOpenAI(
-            model="gpt-4",
-            temperature=0,
-            max_tokens=None,
-            timeout=None,
-            max_retries=2,
-            api_key=st.secrets["openai"]["api_key"]
-        )
-        self.chain = LLMChain(
-            llm=self.llm,
-            prompt=prompt
-        )
-    
-    def get_recommendations(self, skin_type: str, skin_concerns: List[str], additional_info: str) -> Recommendation:
-        """Get personalized skin care recommendations"""
-        try:
-            concerns_str = ", ".join(skin_concerns) if skin_concerns else "Aucun problème spécifique mentionné"
-            # Instruct the LLM to output in the expected JSON format
-            format_instructions = output_parser.get_format_instructions()
-            response = self.chain.invoke({
-                "skin_type": skin_type,
-                "skin_concerns": concerns_str,
-                "additional_info": additional_info,
-                "format_instructions": format_instructions
-            })
-            # Parse the response as JSON and then into the Pydantic model           
-            data = json.loads(response['text'])
-            return Recommendation(**data)
-        except Exception as e:
-            st.error(f"Une erreur s'est produite: {str(e)}")
-            return None
 
 def create_sidebar():
     """Create and handle sidebar elements"""
@@ -121,11 +36,9 @@ def create_sidebar():
 def main():
     create_sidebar()
     
-    st.write("Obtenez des recommandations personnalisées pour votre routine de soins.")
-    
+    st.write("Obtenez des recommandations personnalisées pour votre routine de soins.")    
     # Initialize the advisor
-    advisor = SkinCareAdvisor()
-    
+    advisor = SkinCareAdvisor(api_key=st.secrets["openai"]["api_key"])    
     # Create the main form
     with st.form("skin_care_form"):
         col1, col2 = st.columns(2)
