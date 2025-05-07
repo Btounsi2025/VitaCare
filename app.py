@@ -41,17 +41,29 @@ def main():
     advisor = SkinCareAdvisor(api_key=st.secrets["openai"]["api_key"])    
     # Create the main form
     with st.form("skin_care_form"):
-        col1, col2 = st.columns(2)
-        
+        col1, col2, col3 = st.columns(3)
         with col1:
+            age = st.number_input(
+                "Quel est votre age?",
+                help="Renseignez votre age en année",
+                min_value=1,
+                max_value=100,
+                step=1
+            )
+        with col2:
+            sexe = st.selectbox(
+                "Quel est votre sexe?",
+                ["Femme", "Homme"],
+                help="Renseignez votre sexe"
+            )
+        with col3:
             skin_type = st.selectbox(
                 "Quel est votre type de peau?",
                 ["Normal", "Sec", "Gras", "Mixte", "Sensible"],
                 help="Choisissez le type qui correspond le mieux à votre peau"
             )
-        
-        with col2:
-            skin_concerns = st.multiselect(
+
+        skin_concerns = st.multiselect(
                 "Quelles sont vos préoccupations principales?",
                 [
                     "Acné", "Rides", "Taches brunes", 
@@ -72,6 +84,8 @@ def main():
     if submitted:
         with st.spinner("Analyse en cours..."):
             recommendations = advisor.get_recommendations(
+                age,
+                sexe,
                 skin_type, 
                 skin_concerns, 
                 additional_info
