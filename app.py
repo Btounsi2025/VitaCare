@@ -5,7 +5,6 @@ This application provides personalized skin care recommendations using AI.
 
 import streamlit as st
 from advisor import SkinCareAdvisor
-from recommender import ProductRecommender
 # Configure page
 st.set_page_config(
     page_title="Conseiller en Soins de la Peau",
@@ -97,12 +96,7 @@ def main():
                 return None
             
             if skin_care_analyse:
-                # Initialize recommender
-                recommender = ProductRecommender(api_key=st.secrets["openai"]["api_key"])
-                
-                # Get recommended products
-                # recommendation = recommender.get_recommended_products(skin_care_analyse)
-                
+
                 # Display recommendations
                 st.success("Analyse complétée! Voici vos recommandations personnalisées:")
                 
@@ -126,11 +120,6 @@ def main():
                 for prod in skin_care_analyse.night_routine.products:
                     st.markdown(f"- **{prod.name}** ({prod.type}): {prod.contenance} ml ")
                     st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in prod.composition))   
-                
-                # Display recommended products
-                #st.markdown("### 🛍️ Produits recommandés")
-                #for product in recommendation.products:
-                #    st.markdown(f"- **{product.name}** ({product.type}): {product.action}")
                 
                 # Add a note
                 st.info("""
