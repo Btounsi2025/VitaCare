@@ -4,7 +4,8 @@ This application provides personalized skin care recommendations using AI.
 """
 
 import streamlit as st
-from model import SkinCareAdvisor
+from advisor import SkinCareAdvisor
+from recommender import ProductRecommender
 # Configure page
 st.set_page_config(
     page_title="Conseiller en Soins de la Peau",
@@ -83,36 +84,53 @@ def main():
     
     if submitted:
         with st.spinner("Analyse en cours..."):
-            recommendations = advisor.get_recommendations(
-                age,
-                sexe,
-                skin_type, 
-                skin_concerns, 
-                additional_info
-            )
+            try:
+                skin_care_analyse = advisor.get_skin_care_analyse(
+                    age,
+                    sexe,
+                    skin_type, 
+                    skin_concerns, 
+                    additional_info
+                )
+            except Exception as e:
+                st.error(f"Une erreur s'est produite: {str(e)}")
+                return None
             
-            if recommendations:
+            if skin_care_analyse:
+                # Initialize recommender
+                recommender = ProductRecommender(api_key=st.secrets["openai"]["api_key"])
+                
+                # Get recommended products
+                # recommendation = recommender.get_recommended_products(skin_care_analyse)
+                
+                # Display recommendations
                 st.success("Analyse complétée! Voici vos recommandations personnalisées:")
                 
                 # Diagnostic
                 st.markdown("### 🔍 Diagnostic")
-                st.markdown(recommendations.diagnostic)
+                st.markdown(skin_care_analyse.diagnostic)
                 
                 # Ingredients
                 st.markdown("### 🧪 Ingrédients recommandés")
                 st.markdown("- " + "\n- ".join(
-                    f"{ing.name}: {ing.action}" for ing in recommendations.ingredients
+                    f"{ing.name}: {ing.action}" for ing in skin_care_analyse.ingredients
                 ))
                 
                 # Daily Routine
                 st.markdown("### ☀️ Routine du jour")
-                for prod in recommendations.routine_jour.products:
-                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.action}")
-                
+                for prod in skin_care_analyse.day_routine.products:
+                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.contenance} ml")
+                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in prod.composition))               
                 # Night Routine
                 st.markdown("### 🌙 Routine de nuit")
-                for prod in recommendations.routine_nuit.products:
-                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.action}")
+                for prod in skin_care_analyse.night_routine.products:
+                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.contenance} ml ")
+                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in prod.composition))   
+                
+                # Display recommended products
+                #st.markdown("### 🛍️ Produits recommandés")
+                #for product in recommendation.products:
+                #    st.markdown(f"- **{product.name}** ({product.type}): {product.action}")
                 
                 # Add a note
                 st.info("""
