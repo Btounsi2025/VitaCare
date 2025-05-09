@@ -24,11 +24,14 @@ class Product(BaseModel):
 class Routine(BaseModel):
     products: List[Product]
 
+class Recommendation(BaseModel):
+    type: str
+    products: Product
+
 class SkinCareAnalyse(BaseModel):
     diagnostic: str
     ingredients: List[Ingredient]
-    day_routine: Routine
-    night_routine: Routine
+    recommendation: Product
 
 output_parser = PydanticOutputParser(pydantic_object=SkinCareAnalyse)
 
@@ -43,24 +46,21 @@ Type de peau: {skin_type}
 Problèmes de peau: {skin_concerns}
 Informations supplémentaires: {additional_info}
 
-Veuillez fournir un diagnostic détaillé de la peau  et des problèmes rencontrés. 
-Fournissez des recommandations personnalisées d'ingrédients nécessaires pour résoudre les problèmes de peau.
-Expliquer le role de chaque ingrédient par rapport a une problématique diagnostiquée.
-Fournisser une routine de soins qui traitent efficacement les problèmes de peau diagnostiqués en 
-se basant sur les ingrédients identifiés.
-La routine se compose d'une routine de jour et d'une routine de nuit.
-Chaque routine de soins se compose d'un ensemble de produits de soins de la peau.
-Un produit a un nom générique, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et une action (hydratation, régulation, protection, etc.).
-Un produit a une composition en ingrédients avec le nom et le pourcentage de chaque ingrédient.
-La somme des pourcentages des ingrédients doit être égale à 100.
-La composition d'un produit liste tous les ingrédients pour sa production.
+Donnez un diagnostic détaillé de la peau  et des problèmes rencontrés.
+Fournissez une recommendation pour le besoin {product_type}, pour traiter efficacement les problèmes de peau diagnostiqués.
+Une recommendation est composée d'un type de produit (routine jour, routine nuit, crème, gel, sérum, nettoyant, etc.) et d'un ou plusieurs produits.
+Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et son action par rapport à une problématique diagnostiquée.
+Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
+Cette composition donne la quantité de chaque ingrédient en pourcentage, la somme des pourcentages doit être égale à 100.
+Expliquez le role de chaque produit par rapport a une problématique diagnostiquée.
+
 {format_instructions}
 
-Assurez-vous que vos recommandations sont:
-1. Spécifiques au type de peau et aux problèmes mentionnés
-2. Réalistes et applicables au quotidien
-3. Expliquées de manière claire et accessible
-4. Basées sur des ingrédients reconnus en industrie cosmétique.
+Assurez-vous que vos recommandations:
+1. Sont spécifique au besoin {product_type}
+2. Sont réalistes et applicables au quotidien
+3. Sont expliquées de manière claire et accessible
+4. Respectent les normes de l'industrie cosmétique.
 """
 
 prompt = ChatPromptTemplate.from_template(TEMPLATE)
@@ -82,9 +82,17 @@ class SkinCareAdvisor:
             prompt=prompt
         )
     
-    def get_skin_care_analyse(self, age: int, sexe: str, skin_type: str, skin_concerns: List[str], additional_info: str) -> SkinCareAnalyse:
+    def get_skin_care_analyse(self,
+        age: int,
+        sexe: str,
+        skin_type: str,
+        skin_concerns: List[str],
+        additional_info: str,
+        product_type: List[str]
+    ) -> SkinCareAnalyse:
         """Get personalized skin care recommendations"""
         concerns_str = ", ".join(skin_concerns) if skin_concerns else "Aucun problème spécifique mentionné"
+        product_type_str = ", ".join(product_type) if product_type else "Routine jour et nuit"
         # Instruct the LLM to output in the expected JSON format
         format_instructions = output_parser.get_format_instructions()
         response = self.chain.invoke({
@@ -93,9 +101,10 @@ class SkinCareAdvisor:
             "skin_type": skin_type,
             "skin_concerns": concerns_str,
             "additional_info": additional_info,
+            "product_type": product_type_str,
             "format_instructions": format_instructions
         })
-        # Parse the response as JSON and then into the Pydantic model           
+        # Parse the response as JSON and then into the Pydantic model   
         data = json.loads(response['text'])
         return SkinCareAnalyse(**data)
         

@@ -78,6 +78,14 @@ def main():
             placeholder="Ex: allergies, préférences pour certains ingrédients, routine actuelle...",
             help="Ajoutez toute information pertinente pour des recommandations plus précises"
         )
+        product_type = st.multiselect(
+                "Quel est votre besoin?",
+                [
+                    "Nettoyant", "Gel", "Crème", "Sérum", "Masque", "Tonifiant", "Huile", 
+                    "Exfolient", "Crème solaire", "Routine nuit", "Routine jour"
+                ],
+                help="Sélectionnez un ou plusieurs besoins"
+            )
         
         submitted = st.form_submit_button("Obtenir mes recommandations")
     
@@ -89,7 +97,8 @@ def main():
                     sexe,
                     skin_type, 
                     skin_concerns, 
-                    additional_info
+                    additional_info,
+                    product_type
                 )
             except Exception as e:
                 st.error(f"Une erreur s'est produite: {str(e)}")
@@ -110,17 +119,13 @@ def main():
                     f"{ing.name}: {ing.action}" for ing in skin_care_analyse.ingredients
                 ))
                 
-                # Daily Routine
-                st.markdown("### ☀️ Routine du jour")
-                for prod in skin_care_analyse.day_routine.products:
-                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.contenance} ml")
-                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in prod.composition))               
-                # Night Routine
-                st.markdown("### 🌙 Routine de nuit")
-                for prod in skin_care_analyse.night_routine.products:
-                    st.markdown(f"- **{prod.name}** ({prod.type}): {prod.contenance} ml ")
-                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in prod.composition))   
-                
+                # Recommendations
+                st.markdown("### 💡 Recommandations")
+                product = skin_care_analyse.recommendation
+                st.markdown(f"- **{product.name}** ({product.type}): {product.contenance} ml")
+                st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in product.composition))
+                st.markdown(f"Action: {product.action}")
+
                 # Add a note
                 st.info("""
                 💡 Note: Ces recommandations sont générées par IA à titre informatif. 
