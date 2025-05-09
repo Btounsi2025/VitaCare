@@ -46,23 +46,21 @@ Informations supplémentaires: {additional_info}
 Veuillez fournir un diagnostic détaillé de la peau  et des problèmes rencontrés. 
 Fournissez des recommandations personnalisées d'ingrédients nécessaires pour résoudre les problèmes de peau.
 Expliquer le role de chaque ingrédient par rapport a une problématique diagnostiquée.
-Fournisser un exemple de routine de soins qui traitent efficacement les problèmes de peau diagnostiqués en 
+Fournisser une routine de soins qui traitent efficacement les problèmes de peau diagnostiqués en 
 se basant sur les ingrédients identifiés.
-La routine qui se compose d'une routine de jour et d'une routine de nuit.
+La routine se compose d'une routine de jour et d'une routine de nuit.
 Chaque routine de soins se compose d'un ensemble de produits de soins de la peau.
-Pour chaque produit, préciser le type de produit (crème, gel, lotion, etc.),
-Chaque produit peut contenir en plus des ingrédients identifiées d'autres ingrédients pour les besoin de la production.
-la contenance en ml, et la composition en ingrédients avec le pourcentage de chaque ingrédient.
+Un produit a un nom générique, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et une action (hydratation, régulation, protection, etc.).
+Un produit a une composition en ingrédients avec le nom et le pourcentage de chaque ingrédient.
 La somme des pourcentages des ingrédients doit être égale à 100.
-Cette formule de composition est destinée a une unité de production de produit de soins de la peau.
-
+La composition d'un produit liste tous les ingrédients pour sa production.
 {format_instructions}
 
 Assurez-vous que vos recommandations sont:
 1. Spécifiques au type de peau et aux problèmes mentionnés
 2. Réalistes et applicables au quotidien
 3. Expliquées de manière claire et accessible
-4. Basées sur des ingrédients reconnus en dermatologie.
+4. Basées sur des ingrédients reconnus en industrie cosmétique.
 """
 
 prompt = ChatPromptTemplate.from_template(TEMPLATE)
