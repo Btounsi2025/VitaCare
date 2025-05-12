@@ -121,10 +121,10 @@ def main():
                 
                 # Recommendations
                 st.markdown("### 💡 Recommandations")
-                product = skin_care_analyse.recommendation
-                st.markdown(f"- **{product.name}** ({product.type}): {product.contenance} ml")
-                st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in product.composition))
-                st.markdown(f"Action: {product.action}")
+                for product in skin_care_analyse.recommendation.products:
+                    st.markdown(f"- **{product.name}** ({product.type}): {product.contenance} ml")
+                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in product.composition))
+                    st.markdown(f"Action: {product.action}")
 
                 # Add a note
                 st.info("""

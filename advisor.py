@@ -25,13 +25,12 @@ class Routine(BaseModel):
     products: List[Product]
 
 class Recommendation(BaseModel):
-    type: str
-    product: Product
+    products: List[Product]
 
 class SkinCareAnalyse(BaseModel):
     diagnostic: str
     ingredients: List[Ingredient]
-    recommendation: Product
+    recommendation: Recommendation
 
 output_parser = PydanticOutputParser(pydantic_object=SkinCareAnalyse)
 
@@ -48,11 +47,12 @@ Informations supplémentaires: {additional_info}
 
 Donnez un diagnostic détaillé de la peau  et des problèmes rencontrés.
 Fournissez une recommendation pour le besoin {product_type}, pour traiter efficacement les problèmes de peau diagnostiqués.
-Une recommendation est composée d'un type de produit (routine jour, routine nuit, crème, gel, sérum, nettoyant, etc.) et d'un produit.
+Si le  besoin est un seul produit, une recommendation est composée d'un produit.
+Si le besoin est un ensemble de produits, une recommendation est composée d'un ensemble de produits.
+Si le besoin est une routine, une recommendation est composée d'un ensemble de produits.
 Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et son action par rapport à une problématique diagnostiquée.
 Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
-Cette composition donne la quantité de chaque ingrédient en pourcentage, la somme des pourcentages doit être égale à 100.
-Expliquez le role de chaque produit par rapport a une problématique diagnostiquée.
+Donnez le nom exact et le pourcentage de chaque ingrédient, la somme des pourcentages doit être égale à 100.
 
 {format_instructions}
 
