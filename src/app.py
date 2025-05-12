@@ -12,7 +12,7 @@ st.set_page_config(
 )
 left_co, cent_co,last_co = st.columns(3)
 with cent_co:
-    st.image("images/vitacare_logo.jpg", width=300)
+    st.image("./images/vitacare_logo.jpg", width=300)
 
 
 def create_sidebar():
