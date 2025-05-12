@@ -26,7 +26,7 @@ class Routine(BaseModel):
 
 class Recommendation(BaseModel):
     type: str
-    products: Product
+    product: Product
 
 class SkinCareAnalyse(BaseModel):
     diagnostic: str
@@ -48,7 +48,7 @@ Informations supplémentaires: {additional_info}
 
 Donnez un diagnostic détaillé de la peau  et des problèmes rencontrés.
 Fournissez une recommendation pour le besoin {product_type}, pour traiter efficacement les problèmes de peau diagnostiqués.
-Une recommendation est composée d'un type de produit (routine jour, routine nuit, crème, gel, sérum, nettoyant, etc.) et d'un ou plusieurs produits.
+Une recommendation est composée d'un type de produit (routine jour, routine nuit, crème, gel, sérum, nettoyant, etc.) et d'un produit.
 Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et son action par rapport à une problématique diagnostiquée.
 Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
 Cette composition donne la quantité de chaque ingrédient en pourcentage, la somme des pourcentages doit être égale à 100.
