@@ -30,7 +30,8 @@ def create_sidebar():
         1. Sélectionnez votre type de peau
         2. Indiquez vos préoccupations
         3. Ajoutez des informations supplémentaires
-        4. Obtenez des recommandations personnalisées
+        4. Sélectionnez votre besoin
+        5. Obtenez des recommandations personnalisées
         """)
 
 def main():
@@ -125,7 +126,6 @@ def main():
                     st.markdown(f"- **{product.name}** ({product.type}): {product.contenance} ml")
                     st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in product.composition))
                     st.markdown(f"Action: {product.action}")
-
                 # Add a note
                 st.info("""
                 💡 Note: Ces recommandations sont générées par IA à titre informatif. 

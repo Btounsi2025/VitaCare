@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
 from typing import List, Dict
 import json
-
+import csv
 class Ingredient(BaseModel):
     name: str
     action: str
@@ -45,11 +45,20 @@ Type de peau: {skin_type}
 Problèmes de peau: {skin_concerns}
 Informations supplémentaires: {additional_info}
 
-Donnez un diagnostic détaillé de la peau  et des problèmes rencontrés.
-Fournissez une recommendation pour le besoin {product_type}, pour traiter efficacement les problèmes de peau diagnostiqués.
-Si le  besoin est un seul produit, une recommendation est composée d'un produit.
-Si le besoin est un ensemble de produits, une recommendation est composée d'un ensemble de produits.
-Si le besoin est une routine, une recommendation est composée d'un ensemble de produits.
+Donnez un diagnostic détaillé de la peau et des problèmes mentionnés.
+
+L'utilisateur a besoin d'un ou plusieurs types de produits. Ces types sont: {product_type}.
+Traitez séparément chaque type de produit.
+Deux cas sont possibles:
+1. Le type de produit demandé est nettoyant ou exfoliant.
+2. Le type de produit demandé est un autre type de produit.
+
+Dans le cas 1, utilisez seulement les produits suivants: {predefined_products} et recommandez 
+le produit avec le plus haut degré de fiabilité.
+
+Dans le cas 2, recommandez un produit générique cohérent avec le diagnostic et le type de produit demandé.
+diagnostiqué.  Si le type de produit demandé est une routine, recommandez une routine complète.
+
 Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et son action par rapport à une problématique diagnostiquée.
 Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
 Donnez le nom exact et le pourcentage de chaque ingrédient, la somme des pourcentages doit être égale à 100.
@@ -57,7 +66,7 @@ Donnez le nom exact et le pourcentage de chaque ingrédient, la somme des pource
 {format_instructions}
 
 Assurez-vous que vos recommandations:
-1. Sont spécifique au besoin {product_type}
+1. Sont spécifiques au type {product_type}.
 2. Sont réalistes et applicables au quotidien
 3. Sont expliquées de manière claire et accessible
 4. Respectent les normes de l'industrie cosmétique.
@@ -68,6 +77,9 @@ prompt = ChatPromptTemplate.from_template(TEMPLATE)
 
 class SkinCareAdvisor:
     def __init__(self, api_key: str):
+        with open('data/products.csv', newline='') as csvfile:
+            reader = csv.DictReader(csvfile)
+            self.predefined_products = [row for row in reader]
         """Initialize the skin care advisor with OpenAI model"""
         self.llm = ChatOpenAI(
             model="gpt-4",
@@ -88,7 +100,7 @@ class SkinCareAdvisor:
         skin_type: str,
         skin_concerns: List[str],
         additional_info: str,
-        product_type: List[str]
+        product_type: List[str],
     ) -> SkinCareAnalyse:
         """Get personalized skin care recommendations"""
         concerns_str = ", ".join(skin_concerns) if skin_concerns else "Aucun problème spécifique mentionné"
@@ -102,9 +114,24 @@ class SkinCareAdvisor:
             "skin_concerns": concerns_str,
             "additional_info": additional_info,
             "product_type": product_type_str,
-            "format_instructions": format_instructions
+            "format_instructions": format_instructions,
+            "predefined_products": self.predefined_products
         })
         # Parse the response as JSON and then into the Pydantic model   
         data = json.loads(response['text'])
-        return SkinCareAnalyse(**data)
+        diagnostic = "" 
+        ingredients=[]
+        products=[]
+        if "diagnostic" in data:
+            diagnostic = data['diagnostic']
+        if "ingredients" in data:
+            ingredients=[Ingredient(**ingredient_data) for ingredient_data in data['ingredients']]
+        if "recommendation" in data:
+            if "products" in data['recommendation']:
+                products=[Product(**product_data) for product_data in data['recommendation']['products']]
+        return SkinCareAnalyse(
+            diagnostic=diagnostic,
+            ingredients=ingredients,
+            recommendation=Recommendation(products=products)
+        )
         

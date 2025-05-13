@@ -131,4 +131,53 @@ Distribué sous la licence MIT. Voir `LICENSE` pour plus d'informations.
 
 Votre Nom - [@votre_twitter](https://twitter.com/votre_twitter)
 
-Lien du projet: [https://github.com/votre-username/skincare-advisor](https://github.com/votre-username/skincare-advisor) 
+Lien du projet: [https://github.com/votre-username/skincare-advisor](https://github.com/votre-username/skincare-advisor)
+
+## Usage
+
+1. Start the application:
+```bash
+streamlit run app.py
+```
+
+2. Open your web browser and navigate to the provided local URL (typically http://localhost:8501)
+
+3. Use the interface to:
+   - Select your skin type
+   - Choose your skin concerns
+   - Add any additional information
+   - Get personalized recommendations
+
+## How It Works
+
+1. **Skin Analysis**: The system uses GPT-4 to analyze your skin type and concerns
+2. **Ingredient Matching**: Identifies beneficial ingredients for your specific needs
+3. **Routine Creation**: Generates customized day and night routines
+4. **Product Recommendations**: Uses RAG (Retrieval-Augmented Generation) to match products with recommended ingredients
+
+## Dependencies
+
+- streamlit
+- langchain
+- langchain-openai
+- faiss-cpu
+- pandas
+- pydantic
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Disclaimer
+
+This application provides AI-generated recommendations for informational purposes only. Always consult with a dermatologist for professional medical advice regarding skin care.
+
+## Acknowledgments
+
+- OpenAI for providing the GPT-4 API
+- Streamlit for the web application framework
+- LangChain for the AI integration framework 
