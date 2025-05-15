@@ -1,42 +1,42 @@
 from langchain.output_parsers import PydanticOutputParser
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from langchain.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
-from langchain.chains import LLMChain
 from typing import List, Dict
 import json
 import csv
 class Ingredient(BaseModel):
-    name: str
-    action: str
+    name: str = Field(description="nom de l'ingrédient")
+    action: str = Field(description="action de l'ingrédient")
 
 class QuantifiedIngredient(BaseModel):
-    name: str
-    quantity: float
+    name: str = Field(description="nom de l'ingrédient")
+    quantity: float = Field(description="quantité de l'ingrédient")
 
 class Product(BaseModel):
-    name: str
-    type: str
-    action: str
-    contenance: int
-    composition: List[QuantifiedIngredient]
+    name: str = Field(description="nom du produit")
+    type: str = Field(description="type du produit")
+    action: str = Field(description="action du produit")
+    contenance: int = Field(description="contenance du produit")
+    composition: List[QuantifiedIngredient] = Field(description="composition du produit")
 
 class Routine(BaseModel):
-    products: List[Product]
+    products: List[Product] = Field(description="produits de la routine")
 
 class Recommendation(BaseModel):
-    products: List[Product]
+    products: List[Product] = Field(description="produits recommandés")
 
 class SkinCareAnalyse(BaseModel):
-    diagnostic: str
-    ingredients: List[Ingredient]
-    recommendation: Recommendation
+    diagnostic: str = Field(description="diagnostic de la peau")
+    ingredients: List[Ingredient] = Field(description="ingrédients de la routine")
+    recommendation: Recommendation = Field(description="produits recommandés")
 
 output_parser = PydanticOutputParser(pydantic_object=SkinCareAnalyse)
 
-
 # Create the prompt template
 TEMPLATE = """Vous êtes un expert dermatologue spécialisé dans les soins de la peau.
+
+{format_instructions}
 
 Information sur le patient:
 Age: {age}
@@ -63,8 +63,6 @@ Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contena
 Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
 Donnez le nom exact et le pourcentage de chaque ingrédient, la somme des pourcentages doit être égale à 100.
 
-{format_instructions}
-
 Assurez-vous que vos recommandations:
 1. Sont spécifiques au type {product_type}.
 2. Sont réalistes et applicables au quotidien
@@ -89,10 +87,7 @@ class SkinCareAdvisor:
             max_retries=2,
             api_key=api_key,
         )
-        self.chain = LLMChain(
-            llm=self.llm,
-            prompt=prompt
-        )
+        self.chain = prompt | self.llm | output_parser
     
     def get_skin_care_analyse(self,
         age: int,
@@ -117,21 +112,4 @@ class SkinCareAdvisor:
             "format_instructions": format_instructions,
             "predefined_products": self.predefined_products
         })
-        # Parse the response as JSON and then into the Pydantic model   
-        data = json.loads(response['text'])
-        diagnostic = "" 
-        ingredients=[]
-        products=[]
-        if "diagnostic" in data:
-            diagnostic = data['diagnostic']
-        if "ingredients" in data:
-            ingredients=[Ingredient(**ingredient_data) for ingredient_data in data['ingredients']]
-        if "recommendation" in data:
-            if "products" in data['recommendation']:
-                products=[Product(**product_data) for product_data in data['recommendation']['products']]
-        return SkinCareAnalyse(
-            diagnostic=diagnostic,
-            ingredients=ingredients,
-            recommendation=Recommendation(products=products)
-        )
-        
+        return response
