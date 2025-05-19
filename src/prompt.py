@@ -26,7 +26,8 @@ Dans le cas 2, recommandez un produit générique cohérent avec le diagnostic e
 diagnostiqué.  Si le type de produit demandé est une routine, recommandez une routine complète.
 
 Un produit a un nom, un type (crème, gel, sérum, nettoyant, etc.), une contenance en ml, et son action par rapport à une problématique diagnostiquée.
-Un produit a une composition de tous les ingrédients nécessaires pour la production de ce produit.
+Un produit a une composition complète d'ingrédients.
+Cette composition est destinée à être utilisée par un fabricant de produits cosmétiques.
 Donnez le nom exact et le pourcentage de chaque ingrédient, la somme des pourcentages doit être égale à 100.
 
 Assurez-vous que vos recommandations:

@@ -4,6 +4,7 @@ This application provides personalized skin care recommendations using AI.
 """
 
 import streamlit as st
+import pandas as pd
 from advisor import SkinCareAdvisor
 # Configure page
 st.set_page_config(
@@ -124,8 +125,12 @@ def main():
                 st.markdown("### 💡 Recommandations")
                 for product in skin_care_analyse.recommendation.products:
                     st.markdown(f"- **{product.name}** ({product.type}): {product.contenance} ml")
-                    st.markdown("Composition: " + ", ".join(f"{ingredient.name}: {ingredient.quantity} %" for ingredient in product.composition))
                     st.markdown(f"Action: {product.action}")
+                    st.markdown("Composition:")
+                    composition_table = pd.DataFrame([{"Nom": ingredient.name, "Quantité": f"{ingredient.quantity:.2f} %"} for ingredient in product.composition])
+                    st.dataframe(composition_table, hide_index=True)
+
+                   
                 # Add a note
                 st.info("""
                 💡 Note: Ces recommandations sont générées par IA à titre informatif. 
