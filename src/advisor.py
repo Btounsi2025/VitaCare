@@ -4,7 +4,7 @@ import csv
 from llm_factory import get_llm
 from output_parser import output_parser, SkinCareAnalyse
 from prompt import prompt
-
+from prompt import SHOT_LEARNING_EXAMPLES
 
 class SkinCareAdvisor:
     def __init__(self, api_key: str):
@@ -36,6 +36,7 @@ class SkinCareAdvisor:
             "additional_info": additional_info,
             "product_type": product_type_str,
             "format_instructions": format_instructions,
-            "predefined_products": self.predefined_products
+            "predefined_products": self.predefined_products,
+            "examples": SHOT_LEARNING_EXAMPLES,
         })
         return response
